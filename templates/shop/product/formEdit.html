@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Producto - {{ producto.nombre }}{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1>Editar Producto</h1>
+
+    <form action="{{ url_for('actualizar_producto', id=producto.id) }}" method="POST" enctype="multipart/form-data">
+
+        <div class="form-group">
+            <label for="nombre">Nombre del Producto:</label>
+            <input type="text" id="nombre" name="nombre" class="form-input" value="{{ producto.nombre }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="precio">Precio:</label>
+            <input type="number" id="precio" name="precio" class="form-input" step="0.01" min="0"
+                value="{{ producto.precio }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="stock">Stock:</label>
+            <input type="number" id="stock" name="stock" class="form-input" min="0" value="{{ producto.stock }}"
+                required>
+        </div>
+
+        <div class="form-group">
+            <label for="descripcion">Descripción:</label>
+            <textarea id="descripcion" name="descripcion" class="form-input"
+                rows="4">{{ producto.descripcion }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="imagen">Imagen del Producto:</label>
+            {% if producto.imagen %}
+            <div class="current-image">
+                <img src="{{ url_for('static', filename='images/productos/' + producto.imagen) }}" alt="Imagen actual">
+                <p>Imagen actual: {{ producto.imagen }}</p>
+            </div>
+            {% endif %}
+            <input type="file" id="imagen" name="imagen" class="form-input" accept="image/*">
+            <small class="form-hint">Deja vacío si no quieres cambiar la imagen</small>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+            <a href="{{ url_for('detalle_producto', id=producto.id) }}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

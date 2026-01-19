@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Añadir Nuevo Producto{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1>Añadir Nuevo Producto</h1>
+
+    <form action="{{ url_for('agregar_producto') }}" method="POST" enctype="multipart/form-data">
+
+        <div class="form-group">
+            <label for="nombre">Nombre del Producto:</label>
+            <input type="text" id="nombre" name="nombre" class="form-input" placeholder="Ej: Laptop Dell XPS 15"
+                required>
+        </div>
+
+        <div class="form-group">
+            <label for="precio">Precio:</label>
+            <input type="number" id="precio" name="precio" class="form-input" step="0.01" min="0" placeholder="0.00"
+                required>
+        </div>
+
+        <div class="form-group">
+            <label for="stock">Stock:</label>
+            <input type="number" id="stock" name="stock" class="form-input" min="0" placeholder="0" required>
+        </div>
+
+        <div class="form-group">
+            <label for="descripcion">Descripción:</label>
+            <textarea id="descripcion" name="descripcion" class="form-input" rows="4"
+                placeholder="Describe el producto..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="imagen">Imagen del Producto:</label>
+            <input type="file" id="imagen" name="imagen" class="form-input" accept="image/*">
+            <small class="form-hint">Formatos aceptados: JPG, PNG, GIF</small>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Crear Producto</button>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

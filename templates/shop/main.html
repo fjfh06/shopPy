@@ -1,0 +1,36 @@
+{% extends "base.html" %} {% block title %}Inicio/Buscar{% endblock %} {% block
+content %}
+
+<nav class="navbar">
+    <div class="nav-links">
+        <a href="{{ url_for('index') }}" class="nav-link">Catálogo</a>
+        <a href="{{ url_for('carrito') }}" class="nav-link">Carrito</a>
+        <a href="{{ url_for('nuevo_producto') }}" class="nav-link">Añadir Producto</a>
+    </div>
+</nav>
+
+<h1>Catálogo de productos</h1>
+
+<div class="search-container">
+    <form action="{{ url_for('index') }}" method="get" class="search-input">
+        <input class="search-placeholder" type="text" name="q" placeholder="Buscar productos..."
+            value="{{ request.args.get('q', '') }}" />
+        <button type="submit" class="btn">Buscar</button>
+    </form>
+</div>
+
+<ul class="product-list">
+    {% for product in productos %}
+    <li class="product-item">
+        <h2>{{ product.nombre }}</h2>
+        <p>Precio: ${{ "%.2f"|format(product.precio) }}</p>
+    </li>
+    {% else %}
+    <div class="flash-message">
+        <p class="flash-info">No se encontraron productos.</p>
+    </div>
+
+    {% endfor %}
+</ul>
+
+{% endblock %}
