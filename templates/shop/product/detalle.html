@@ -1,19 +1,22 @@
 {% extends "base.html" %}
 
-{% block title %}{{ producto.nombre }} - Detalle{% endblock %}
+{% block title %}{{ producto.name }} - Detalle{% endblock %}
 
 {% block content %}
 <div class="product-detail">
     <div class="product-header">
-        <h1>{{ producto.nombre }}</h1>
+        <h1>{{ producto.name }}</h1>
         <span class="product-id">ID: {{ producto.id }}</span>
     </div>
 
     <div class="product-info">
         <div class="product-image">
-            {% if producto.imagen %}
-            <img src="{{ url_for('static', filename='images/productos/' + producto.imagen) }}"
-                alt="{{ producto.nombre }}">
+            {% if producto.img %}
+            <img
+                src="{{ url_for('static', filename='uploads/' + producto.img) }}"
+                alt="{{ producto.name }}"
+                class="product-image"
+            />
             {% else %}
             <div class="no-image">Sin imagen</div>
             {% endif %}
@@ -22,20 +25,13 @@
         <div class="product-data">
             <div class="info-row">
                 <label>Precio:</label>
-                <span class="price">${{ "%.2f"|format(producto.precio) }}</span>
+                <span class="price">{{ "%.2f"|format(producto.price) }}€</span>
             </div>
 
             <div class="info-row">
                 <label>Stock disponible:</label>
                 <span>{{ producto.stock }} unidades</span>
             </div>
-
-            {% if producto.descripcion %}
-            <div class="info-row">
-                <label>Descripción:</label>
-                <p>{{ producto.descripcion }}</p>
-            </div>
-            {% endif %}
         </div>
     </div>
 
@@ -44,14 +40,18 @@
             <button type="submit" class="btn btn-primary">Añadir al Carrito</button>
         </form>
 
-        <a href="{{ url_for('editar_producto', id=producto.id) }}" class="btn btn-secondary">Editar</a>
+        <form action="/editar/{{ producto.id }}" method="GET">
+            <button type="submit" class="btn btn-primary">Editar</button>
+        </form>      
 
         <form action="/eliminar/{{ producto.id }}" method="POST"
             onsubmit="return confirm('¿Estás seguro de eliminar este producto?');">
             <button type="submit" class="btn btn-danger">Eliminar</button>
         </form>
 
-        <a href="{{ url_for('index') }}" class="btn btn-outline">Volver al catálogo</a>
+        <form action="/" method="GET">
+            <button type="submit" class="btn btn-primary">Volver al catálogo</button>
+        </form>
     </div>
 </div>
 {% endblock %}

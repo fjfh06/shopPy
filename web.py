@@ -14,7 +14,7 @@ from clases import Product, app, db, User, Purchase, PurchaseLine
 def index():
     q = request.args.get('q', '')  # Obtener término de búsqueda
     if q:
-        productos = Product.query.filter(Product.nombre.ilike(f'%{q}%')).all()
+        productos = Product.query.filter(Product.name.ilike(f'%{q}%')).all()
     else:
         productos = Product.query.all()
     usuario = None
@@ -108,8 +108,9 @@ def login():
         # print(user.contrasena)
         # print(password)
         # print(generate_password_hash(password))
-        if user and check_password_hash(user.contrasena ,password):
+        if user and check_password_hash(user.password ,password):
             session['user'] = user.id
+            session['roles'] = user.roles.split()
             # 🆕 Crear carrito si no existe
             if 'carrito' not in session:
                 session['carrito'] = {}  # {product_id: cantidad}
@@ -124,8 +125,9 @@ def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+
         hashed_password = generate_password_hash(password)
-        new_user = User(username=username, contrasena=hashed_password)
+        new_user = User(username=username, password=hashed_password)
         db.session.add(new_user)
         db.session.commit() 
         return redirect(url_for('login'))
@@ -135,75 +137,85 @@ def register():
 @app.route('/logout')
 def logout():
     session.pop('user', None)
-    return redirect(url_for('login'))
+    return redirect(url_for('index'))
 
 
 @app.route('/carrito')
 def carrito():
-    if 'carrito' not in session:
-        session['carrito'] = []
-    productos_carrito = Product.query.filter(Product.id.in_(session['carrito'])).all()
-    return render_template('shop/cart.html', productos=productos_carrito)
+    if 'carrito' not in session or not isinstance(session['carrito'], dict):
+        session['carrito'] = {}
+
+    carrito_ids = [int(pid) for pid in session['carrito'].keys()]  # convertir a int
+    productos_carrito = Product.query.filter(Product.id.in_(carrito_ids)).all()
+
+    for p in productos_carrito:
+        p.cantidad = session['carrito'][str(p.id)]  # clave string
+
+    return render_template('shop/cart.html', carrito=productos_carrito)
+
+
 
 @app.route('/carrito/<int:producto_id>', methods=['POST'])
 def agregar_al_carrito(producto_id):
-    if 'carrito' not in session:
-        session['carrito'] = []
-
+    if 'carrito' not in session or not isinstance(session['carrito'], dict):
+        session['carrito'] = {}
+    
     carrito = session['carrito']
+    pid = str(producto_id)  # ✅ usar string como clave
 
-    # Si el producto ya está en el carrito -> sumar 1
-    if producto_id in carrito:
-        carrito[producto_id] += 1
+    if pid in carrito:
+        carrito[pid] += 1
     else:
-        carrito[producto_id] = 1  # Primera vez → 1 unidad
+        carrito[pid] = 1
 
-    # Guardar cambios
     session['carrito'] = carrito
     session.modified = True
-    return redirect(url_for('index'))
+    return redirect(url_for('carrito'))
+
 
 @app.route('/eliminar_del_carrito/<int:producto_id>', methods=['POST'])
 def eliminar_del_carrito(producto_id):
+    if 'carrito' not in session or not isinstance(session['carrito'], dict):
+        session['carrito'] = {}
+
     carrito = session['carrito']
-    if producto_id in carrito:
-            carrito[producto_id] -= 1
+    pid = str(producto_id)  # clave string
 
-            if carrito[producto_id] <= 0:
-                del carrito[producto_id]
+    if pid in carrito:
+        carrito[pid] -= 1
+        if carrito[pid] <= 0:
+            del carrito[pid]
 
-            session['carrito'] = carrito
-            session.modified = True
+    session['carrito'] = carrito
+    session.modified = True
     return redirect(url_for('carrito'))
+
 
 @app.route('/pedido', methods=['POST'])
 def realizar_pedido():
     if 'carrito' not in session or not session['carrito']:
         return redirect(url_for('carrito'))
 
-    # 1️⃣ Crear la compra principal
     purchase = Purchase(user_id=session['user'], status='OPEN')
     db.session.add(purchase)
     db.session.commit()  # Necesario para obtener purchase.id
 
-    # 2️⃣ Crear los detalles de la compra
     for product_id, cantidad in session['carrito'].items():
         detalle = PurchaseLine(
             purchase_id=purchase.id,
             product_id=product_id,
-            quantity=cantidad
+            cantidad=cantidad,
+            precio_unidad=Product.query.get(product_id).price
         )
         db.session.add(detalle)
-    db.session.commit()  # Guardar todos los detalles
+    db.session.commit()
 
-    # Vaciar el carrito después de realizar el pedido
-    session['carrito'] = []
+    session['carrito'] = {}  # ❌ ahora como diccionario
     session.modified = True
     return redirect(url_for('index'))
+
 
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         app.run(host="0.0.0.0", port=5000, debug=True)
-
-

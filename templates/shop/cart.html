@@ -4,148 +4,91 @@
 
 {% block content %}
 <div class="cart-container">
-    <h1>Carrito de Compras</h1>
 
-    {% if carrito %}
-    <div class="cart-items">
-        <table class="cart-table">
-            <thead>
-                <tr>
-                    <th>Producto</th>
-                    <th>Precio</th>
-                    <th>Cantidad</th>
-                    <th>Subtotal</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in carrito %}
-            {% extends "base.html" %}
+{% if carrito %}
 
-{% block title %}Carrito de Compras{% endblock %}
+{% set ns = namespace(subtotal=0) %}
 
-{% block content %}
-<div class="cart-container">
-    <h1>Carrito de Compras</h1>
+<div class="cart-content">
+    <table class="cart-table">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Precio</th>
+                <th>Cantidad</th>
+                <th>Subtotal</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        {% set ns = namespace(subtotal=0) %}
 
-    {% if carrito %}
-    <div class="cart-items">
-        <table class="cart-table">
-            <thead>
-                <tr>
-                    <th>Producto</th>
-                    <th>Precio</th>
-                    <th>Cantidad</th>
-                    <th>Subtotal</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in carrito %}
-                <tr class="cart-item">
-                    <td class="product-info">
-                        <div class="product-name">{{ item.nombre }}</div>
-                    </td>
-                    <td class="price">${{ "%.2f"|format(item.precio) }}</td>
-                    <td class="quantity">
-                        <form action="/carrito/actualizar/{{ item.id }}" method="POST" class="quantity-form">
-                            <button type="submit" name="accion" value="decrementar" class="btn-qty">-</button>
-                            <span class="qty-value">{{ item.cantidad }}</span>
-                            <button type="submit" name="accion" value="incrementar" class="btn-qty">+</button>
-                        </form>
-                    </td>
-                    <td class="subtotal">${{ "%.2f"|format(item.precio * item.cantidad) }}</td>
-                    <td class="actions">
-                        <form action="/carrito/eliminar/{{ item.id }}" method="POST">
-                            <button type="submit" class="btn btn-danger">Eliminar</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+{% set ns = namespace(subtotal=0) %}
 
-    <div class="cart-summary">
-        <div class="summary-row">
-            <span>Subtotal:</span>
-            <span class="amount">${{ "%.2f"|format(subtotal) }}</span>
-        </div>
-        <div class="summary-row">
-            <span>IVA (21%):</span>
-            <span class="amount">${{ "%.2f"|format(subtotal * 0.21) }}</span>
-        </div>
-        <div class="summary-row total">
-            <span>Total:</span>
-            <span class="amount">${{ "%.2f"|format(subtotal * 1.21) }}</span>
-        </div>
+<tbody>
+{% for item in carrito %}
+    {% set item_subtotal = item.price|float * item.cantidad %}
+    {% set item_subtotal_iva = item_subtotal * 1.21 %}
+    {% set ns.subtotal = ns.subtotal + item_subtotal %}
 
-        <div class="cart-actions">
-            <a href="{{ url_for('index') }}" class="btn btn-secondary">Seguir Comprando</a>
-            <button type="button" class="btn btn-primary">Proceder al Pago</button>
-        </div>
-    </div>
+    <tr class="cart-item">
+        <td>{{ item.name }}</td>
 
-    {% else %}
-    <div class="empty-cart">
-        <div class="empty-icon">🛒</div>
-        <h2>Tu carrito está vacío</h2>
-        <p>Añade productos para comenzar tu compra</p>
-        <a href="{{ url_for('index') }}" class="btn btn-primary">Ir a la tienda</a>
-    </div>
-    {% endif %}
+        <td>{{ "%.2f"|format(item.price|float) }}€</td>
+
+        <td class="quantity">
+            <form action="/eliminar_del_carrito/{{ item.id }}" method="POST">
+                <button type="submit" name="accion" value="decrementar" class="btn-qty">-</button>
+            </form>
+            <span>{{ item.cantidad }}</span>
+            <form action="/carrito/{{ item.id }}" method="POST">
+                <button type="submit" name="accion" value="incrementar" class="btn-qty">+</button>
+            </form>
+        </td>
+
+        <td>{{ "%.2f"|format(item_subtotal_iva) }}€</td>
+
+        <td>
+            <form action="/eliminar_del_carrito/{{ item.id }}" method="POST">
+                <button type="submit" class="btn btn-danger">Eliminar</button>
+            </form>
+        </td>
+    </tr>
+{% endfor %}
+</tbody>
+
+    </table>
 </div>
-{% endblock %}    <tr class="cart-item">
-                    <td class="product-info">
-                        <div class="product-name">{{ item.nombre }}</div>
-                    </td>
-                    <td class="price">${{ "%.2f"|format(item.precio) }}</td>
-                    <td class="quantity">
-                        <form action="/carrito/actualizar/{{ item.id }}" method="POST" class="quantity-form">
-                            <button type="submit" name="accion" value="decrementar" class="btn-qty">-</button>
-                            <span class="qty-value">{{ item.cantidad }}</span>
-                            <button type="submit" name="accion" value="incrementar" class="btn-qty">+</button>
-                        </form>
-                    </td>
-                    <td class="subtotal">${{ "%.2f"|format(item.precio * item.cantidad) }}</td>
-                    <td class="actions">
-                        <form action="/carrito/eliminar/{{ item.id }}" method="POST">
-                            <button type="submit" class="btn btn-danger">Eliminar</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+
+<div class="cart-summary">
+    <div class="summary-row">
+        <span>Subtotal (sin IVA):</span>
+        <span>{{ "%.2f"|format(ns.subtotal) }}€</span>
+    </div>
+    <div class="summary-row">
+        <span>IVA (21%):</span>
+        <span>{{ "%.2f"|format(ns.subtotal * 0.21) }}€</span>
+    </div>
+    <div class="summary-row total">
+        <span>Total:</span>
+        <span>{{ "%.2f"|format(ns.subtotal * 1.21) }}€</span>
     </div>
 
-    <div class="cart-summary">
-        <div class="summary-row">
-            <span>Subtotal:</span>
-            <span class="amount">${{ "%.2f"|format(subtotal) }}</span>
-        </div>
-        <div class="summary-row">
-            <span>IVA (21%):</span>
-            <span class="amount">${{ "%.2f"|format(subtotal * 0.21) }}</span>
-        </div>
-        <div class="summary-row total">
-            <span>Total:</span>
-            <span class="amount">${{ "%.2f"|format(subtotal * 1.21) }}</span>
-        </div>
-
-        <div class="cart-actions">
-            <a href="{{ url_for('shop') }}" class="btn btn-secondary">Seguir Comprando</a>
-            <button type="button" class="btn btn-primary">Proceder al Pago</button>
-        </div>
+    <div class="cart-actions">
+        <form action="/" method="GET">
+            <button class="btn btn-primary">Seguir Comprando</button>
+        </form>
+        <form action="{{ url_for('realizar_pedido') }}" method="POST">
+            <button class="btn btn-primary">Proceder al Pago</button>
+        </form>
     </div>
+</div>
 
-    {% else %}
-    <div class="empty-cart">
-        <div class="empty-icon">🛒</div>
-        <h2>Tu carrito está vacío</h2>
-        <p>Añade productos para comenzar tu compra</p>
-        <a href="{{ url_for('shop') }}" class="btn btn-primary">Ir a la tienda</a>
-    </div>
-    {% endif %}
+{% else %}
+    <p class="flash-message">Tu carrito está vacío</p>
+    <form action="/" method="GET">
+            <button class="btn btn-primary">Seguir Comprando</button>
+    </form>
+{% endif %}
+
 </div>
 {% endblock %}
